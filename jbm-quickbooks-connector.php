@@ -69,7 +69,6 @@ function jbm_quickbooks_enqueue_current_order_html() {
 			$send_disabled = 'disabled';
 		} else {
 			
-			
 			$unserial_quickbooks_status = unserialize(str_replace('\\', '', $quickbooks_status));
 			if ( $unserial_quickbooks_status != false ) {
 				$quickbooks_status = json_encode($unserial_quickbooks_status);
@@ -106,7 +105,6 @@ function jbm_quickbooks_enqueue_current_order_html() {
 }
 
 function jbm_quickbooks_enqueue_current_order_save( $post_ID, $post, $update ) {
-	if ( ! get_option('jbm_qb_enabled') ) return;
 	if ( isset( $_POST['quickbooks_enqueue_current_order'] ) && $_POST['quickbooks_enqueue_current_order'] == 1 ) {
 		jbm_quickbooks_enqueue_new_order( $post_ID );
 	}
@@ -132,6 +130,7 @@ function jbm_qb_admin_settings_html() {
 		update_option( 'jbm_qb_TxnIDcode', $_POST['jbm_qb_TxnIDcode'] );
 		update_option( 'jbm_qb_ClassRef', $_POST['jbm_qb_ClassRef'] );
 		update_option( 'jbm_qb_InventorySiteRef', $_POST['jbm_qb_InventorySiteRef'] );
+		update_option( 'jbm_qb_GlobalCustomer', $_POST['jbm_qb_GlobalCustomer'] );
 		
 		//update_option( 'jbm_qb_user', $_POST['jbm_qb_user'] );
 		//update_option( 'jbm_qb_pass', $_POST['jbm_qb_user'] );
@@ -143,6 +142,7 @@ function jbm_qb_admin_settings_html() {
 	$TxnIDcode = get_option('jbm_qb_TxnIDcode');//'CLUB';
 	$ClassRef = get_option('jbm_qb_ClassRef');//'Club 8';
 	$InventorySiteRef = get_option('jbm_qb_InventorySiteRef');//'Escondido';
+	$GlobalCustomer = get_option('jbm_qb_GlobalCustomer');//'Escondido';
 	
 	global $wpdb;
 	$errors_query = "
@@ -162,6 +162,7 @@ function jbm_qb_admin_settings_html() {
 		<p><label><strong>Transaction Prefix</strong> <input name="jbm_qb_TxnIDcode" id="jbm_qb_TxnIDcode" type="text" placeholder="i.e. ISO" value="<?=$TxnIDcode?>" ></label></p>
 		<p><label><strong>Invoice Class</strong> <input name="jbm_qb_ClassRef" id="jbm_qb_ClassRef" type="text" placeholder="ISO International" value="<?=$ClassRef?>" ></label></p>
 		<p><label><strong>Inventory Site</strong> <input name="jbm_qb_InventorySiteRef" id="jbm_qb_InventorySiteRef" type="text" placeholder="Escondido" value="<?=$InventorySiteRef?>" ></label></p>
+		<p><label><strong>Global Customer</strong> <input name="jbm_qb_GlobalCustomer" id="jbm_qb_GlobalCustomer" type="text" placeholder="Override Customer By Payment Method" value="<?=$GlobalCustomer?>" >Leave empty to assign customer by payment method.</label></p>
 		</div>
 		<p><button type="submit" name="jbm_qb_submit" id="jbm_qb_submit" value="1" class="button">Save Settings</button></p>
 	</form>
