@@ -2,7 +2,7 @@
 /*
 Plugin Name: Quickbooks Connector
 Description: Sync orders to quickbooks
-Version: 1.0
+Version: 1.1
 */
 
 /***
