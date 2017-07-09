@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Quickbooks Connector
+Plugin Name: _Quickbooks Connector
 Description: Sync orders to quickbooks
 Version: 1.2
 */
