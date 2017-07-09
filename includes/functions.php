@@ -189,7 +189,9 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 		<CustomerSalesTaxCodeRef>
           <FullName>'.$CustomerSalesTaxCodeRef.'</FullName>
         </CustomerSalesTaxCodeRef>';
- 
+	
+	//Need to see if there are coupons. Coupons affect the item total. If the item total is less than sub total, but there are no coupons use the item total because there is a backend discount.
+ 	$coupon_count = count($order->get_items('coupon'));
 	foreach ( $order->get_items() as $item ) {
 		
 		$item_product_id = $item['product_id'];
@@ -200,6 +202,16 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 			$product = wc_get_product($item['product_id']);
 		}
 		$item_sku = $product->get_sku();
+		$item_subtotal = $item['subtotal'];
+		$item_total = $item['total'];
+		
+		if ( $coupon_count == 0 && $item_total < $item_subtotal ) {
+			$item_amount = $item_total; //We had a backend manual adjustment
+		} else {
+			$item_amount = $item_subtotal;
+		}
+		
+		
 		$item_total_tax = $item['total_tax'];
 		if ( $item_total_tax > 0 ) {
 			$SalesTaxCodeRef = 'Tax';
@@ -216,7 +228,7 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 		  <ClassRef>
 		  	<FullName>'.$ClassRef.'</FullName>
 		  </ClassRef>
-          <Amount>'.number_format($item['total'],2,'.','').'</Amount>
+          <Amount>'.number_format($item_amount,2,'.','').'</Amount>
 		  <InventorySiteRef>
 		  	<FullName>'.$InventorySiteRef.'</FullName>
 		  </InventorySiteRef>
