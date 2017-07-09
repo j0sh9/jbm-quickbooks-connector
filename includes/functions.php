@@ -216,7 +216,7 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 		  <ClassRef>
 		  	<FullName>'.$ClassRef.'</FullName>
 		  </ClassRef>
-          <Amount>'.number_format($item['subtotal'],2,'.','').'</Amount>
+          <Amount>'.number_format($item['total'],2,'.','').'</Amount>
 		  <InventorySiteRef>
 		  	<FullName>'.$InventorySiteRef.'</FullName>
 		  </InventorySiteRef>
