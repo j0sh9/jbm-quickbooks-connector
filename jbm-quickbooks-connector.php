@@ -71,7 +71,7 @@ function jbm_quickbooks_enqueue_current_order_html() {
 	$order_id = $post->ID;
 	$quickbooks_status = get_post_meta($order_id, '_jbm_quickbooks_response', true);
 	
-	if ( $quickbooks_status !== false ) {
+	if ( $quickbooks_status != false ) {
 		if ( $quickbooks_status == 'Processing' ) {
 			$status_msg = '<strong>Order Sent to Queue</strong>';
 			$send_text = "Processing";
