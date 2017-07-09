@@ -79,11 +79,11 @@ function jbm_quickbooks_enqueue_current_order_html() {
 			$send_disabled = 'disabled';
 		} else {
 			if ( !is_array($quickbooks_status) ) {
-				$decode_status = json_decode(str_replace('\\', '', $quickbooks_status));
+				$decode_status = json_decode(str_replace('\\', '', $quickbooks_status),true);
 				if ( $decode_status === NULL ) {
 					$quickbooks_status = unserialize(str_replace('\\', '', $quickbooks_status));
 				} else {
-					$quickbooks_status = unserialize(serialize($decode_status));
+					$quickbooks_status = $decode_status;
 				}
 			}
 			
