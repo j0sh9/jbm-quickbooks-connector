@@ -69,7 +69,7 @@ add_action( 'add_meta_boxes', 'jbm_quickbooks_enqueue_current_order_meta_box');
 function jbm_quickbooks_enqueue_current_order_html() {
 	global $post;
 	$order_id = $post->ID;
-	$quickbooks_status = get_post_meta($order_id, '_jbm_quickbooks_response', true);
+	$quickbooks_status = get_post_meta($order_id, '_jbm_quickbooks_response');
 	
 	if ( $quickbooks_status != false ) {
 		if ( $quickbooks_status == 'Processing' ) {
