@@ -2,7 +2,7 @@
 /*
 Plugin Name: Quickbooks Connector
 Description: Sync orders to quickbooks
-Version: 1.1
+Version: 1.2
 */
 
 /***
@@ -32,11 +32,19 @@ function jbm_quickbooks_enqueue_inventory_list_query(  ) {
 //add_action( 'init', 'jbm_quickbooks_enqueue_inventory_list_query' );
 
 function jbm_quickbooks_enqueue_new_order( $order_id ) {
+	if ( ! $order_id ) return;
 	if ( ! get_option('jbm_qb_enabled') ) return;
 	require_once plugin_dir_path( __FILE__ )."includes/config.php";
 	$Queue = new QuickBooks_WebConnector_Queue($dsn);
-	$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $order_id);
-	update_post_meta($order_id, '_jbm_quickbooks_response', 'Processing');
+	if ( is_array( $order_id ) ) {
+		foreach( $order_id as $send_id ) {
+			$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $send_id);
+			update_post_meta($send_id, '_jbm_quickbooks_response', 'Processing');
+		}
+	} else {
+		$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $order_id);
+		update_post_meta($order_id, '_jbm_quickbooks_response', 'Processing');
+	}
 	
 }
 add_action( 'woocommerce_order_status_processing', 'jbm_quickbooks_enqueue_new_order', 10, 1);
@@ -62,29 +70,30 @@ function jbm_quickbooks_enqueue_current_order_html() {
 	global $post;
 	$order_id = $post->ID;
 	$quickbooks_status = get_post_meta($order_id, '_jbm_quickbooks_response', true);
-	if ( $quickbooks_status != false ) {
+	
+	if ( $quickbooks_status !== false ) {
 		if ( $quickbooks_status == 'Processing' ) {
 			$status_msg = '<strong>Order Sent to Queue</strong>';
 			$send_text = "Processing";
 			$send_disabled = 'disabled';
 		} else {
-			
-			$unserial_quickbooks_status = unserialize(str_replace('\\', '', $quickbooks_status));
-			if ( $unserial_quickbooks_status != false ) {
-				$quickbooks_status = json_encode($unserial_quickbooks_status);
-				$quickbooks_status = json_decode($quickbooks_status);
-			} else {
-				$quickbooks_status = json_decode($quickbooks_status);
+			if ( !is_array($quickbooks_status) ) {
+				$decode_status = json_decode(str_replace('\\', '', $quickbooks_status));
+				if ( $decode_status === NULL ) {
+					$quickbooks_status = unserialize(str_replace('\\', '', $quickbooks_status));
+				} else {
+					$quickbooks_status = unserialize(serialize($decode_status));
+				}
 			}
 			
-			if ( $quickbooks_status->statusCode !== '0' ) {
-				$status_msg = '<strong style="color:red;">'.$quickbooks_status->statusMessage.'</strong><br>';
-				$status_msg .= '<span>Status Code: '.$quickbooks_status->statusCode.'</span>';
+			if ( $quickbooks_status['statusCode'] !== '0' ) {
+				$status_msg = '<strong style="color:red;">'.$quickbooks_status['statusMessage'].'</strong><br>';
+				$status_msg .= '<span>Status Code: '.$quickbooks_status['statusCode'].'</span>';
 				$send_text = "Resend To Quickbooks";
 				$send_disabled = '';
 			} else {
-				$status_msg = '<strong>'.$quickbooks_status->statusMessage.'</strong><br>';
-				$status_msg .= '<strong>Transaction ID:</strong> '.$quickbooks_status->TxnID;
+				$status_msg = '<strong>'.$quickbooks_status['statusMessage'].'</strong><br>';
+				$status_msg .= '<strong>Transaction ID:</strong> '.$quickbooks_status['TxnID'];
 				$send_disabled = "disabled";
 				$send_text = "Sent";
 			}
@@ -142,7 +151,7 @@ function jbm_qb_admin_settings_html() {
 	$TxnIDcode = get_option('jbm_qb_TxnIDcode');//'CLUB';
 	$ClassRef = get_option('jbm_qb_ClassRef');//'Club 8';
 	$InventorySiteRef = get_option('jbm_qb_InventorySiteRef');//'Escondido';
-	$GlobalCustomer = get_option('jbm_qb_GlobalCustomer');//'Escondido';
+	$GlobalCustomer = get_option('jbm_qb_GlobalCustomer');//'*Online orders club8';
 	
 	global $wpdb;
 	$errors_query = "
@@ -195,7 +204,17 @@ function jbm_qb_admin_settings_html() {
 			<tr><th>Order #</th><th>Error Code</th><th>Error Message</th></tr>
 			
 	<?php foreach($order_errors as $error) {
-		$errors = unserialize(get_post_meta($error->post_id, '_jbm_quickbooks_response', true));
+		$errors = get_post_meta($error->post_id, '_jbm_quickbooks_response', true);
+		
+		if ( !is_array($errors) ) {
+			$decode_errors = json_decode(str_replace('\\', '', $errors));
+			if ( $decode_errors === NULL ) {
+				$errors = unserialize(str_replace('\\', '', $errors));
+
+			} else {
+				$errors = unserialize(serialize($errors));
+			}
+		}
 	?>
 			<tr>
 				<td><a href="/wp-admin/post.php?post=<?=$error->post_id;?>&action=edit" target="_blank"><?=$error->post_id;?></a></td>
@@ -208,3 +227,69 @@ function jbm_qb_admin_settings_html() {
 	<?php
 }
 add_action( 'admin_menu', 'jbm_qb_admin_settings' );
+
+
+// add bulk actions to the Orders screen table bulk action drop-downs
+add_action( 'admin_footer-edit.php', 'jbm_quickbooks_bulk_actions' );
+function jbm_quickbooks_bulk_actions() {
+	global $post_type, $post_status;
+
+	if ( $post_type === 'shop_order' && $post_status !== 'trash' && current_user_can('manage_options') ) :
+
+		?>
+		<script type="text/javascript">
+			jQuery( document ).ready( function ( $ ) {
+				$( 'select[name=action]' ).append(
+					$( '<option>' ).val( 'jbm_quickbooks_bulk_send' ).text( 'Send To QuickBooks' )
+				);
+			} );
+		</script>
+		<?php
+
+	endif;
+}
+// process orders bulk actions
+add_action( 'load-edit.php', 'jbm_quickbooks_process_bulk_actions' );
+function jbm_quickbooks_process_bulk_actions() {
+	if ( isset( $_GET['post_type'] ) && $_GET['post_type'] == 'shop_order' )
+		$post_type = 'shop_order';
+	
+	if ( $post_type === 'shop_order' ) :
+
+		// Get the bulk action
+		$wp_list_table = _get_list_table( 'WP_Posts_List_Table' );
+		$action        = $wp_list_table->current_action();
+		$order_ids     = array();
+
+		// Return if not processing PIP actions
+		if ( ! $action || ! $action == 'jbm_quickbooks_bulk_send' ) {
+			return;
+		}
+
+		// Make sure order IDs are submitted
+		if ( isset( $_REQUEST['post'] ) ) {
+			$order_ids = array_map( 'absint', $_REQUEST['post'] );
+		}
+
+		// Return if there are no orders selected
+		if ( ! $order_ids ) {
+			$sendback = add_query_arg( array('qb_send_error' => 'no_ids' ), $_GET['_wp_http_referer'] );
+			wp_redirect($sendback);
+			exit();
+		} else {
+			jbm_quickbooks_enqueue_new_order( $order_ids );
+			$sendback = add_query_arg( array('qb_send_count' => count($order_ids) ), $_GET['_wp_http_referer'] );
+			wp_redirect($sendback);
+			exit();
+		}
+
+	endif;
+}
+function jbm_quickbooks_bulk_send_notice() {
+	if ( isset($_GET['qb_send_error']) && $_GET['qb_send_error'] == 'no_ids' )
+		echo '<div class="error notice"><p>No orders were selected to send to QuickBooks.</p></div>';
+	
+	if ( isset($_GET['qb_send_count']) )
+		echo '<div class="updated notice"><p>'.$_GET['qb_send_count'].' orders sent to QuickBooks.</p></div>';
+}
+add_action( 'admin_notices', 'jbm_quickbooks_bulk_send_notice' );

@@ -119,26 +119,30 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 	$TxnIDcode = get_option('jbm_qb_TxnIDcode');//'CLUB';
 	$ClassRef = get_option('jbm_qb_ClassRef');//'Club 8';
 	$InventorySiteRef = get_option('jbm_qb_InventorySiteRef');//'Escondido';
+	$GlobalCustomer = get_option('jbm_qb_GlobalCustomer');//'*Online orders club8';
 	
 	$order = wc_get_order($ID);
 	
-	$payment_method = $order->get_payment_method();
-	//authorize_net_cim_credit_card
-	//icanpay
-	//bacs || other || empty, literally empty,not the string
-	//cheque
-	//cod
-	$customer_ref = '*Wire Transfer'; // Default customer because this get looked at the most by accounting
-	if ( $payment_method == 'authorize_net_cim_credit_card' )
-		$customer_ref = '*VP CC';
-	if ( $payment_method == 'icanpay' )
-		$customer_ref = '*ISO CC';
-	if ( $payment_method == 'cheque' )
-		$customer_ref = '*Check';
-	if ( $payment_method == 'cod' )
-		$customer_ref = '*Cash';
+	if ( !$GlobalCustomer || empty($GlobalCustomer) ) {
 	
-	$customer_ref = '*Online orders club8';
+		$payment_method = $order->get_payment_method();
+		//authorize_net_cim_credit_card
+		//icanpay
+		//bacs || other || empty, literally empty,not the string
+		//cheque
+		//cod
+		$customer_ref = '*Wire Transfer'; // Default customer because this get looked at the most by accounting
+		if ( $payment_method == 'authorize_net_cim_credit_card' )
+			$customer_ref = '*VP CC';
+		if ( $payment_method == 'icanpay' )
+			$customer_ref = '*ISO CC';
+		if ( $payment_method == 'cheque' )
+			$customer_ref = '*Check';
+		if ( $payment_method == 'cod' )
+			$customer_ref = '*Cash';
+	} else {
+		$customer_ref = $GlobalCustomer;//'*Online orders club8';
+	}
 	
 	$LotNumber = '1';// Need to get this from the order at soem point
 	
@@ -347,8 +351,10 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
  */
 function _quickbooks_invoice_add_response($requestID, $user, $action, $ID, $extra, &$err, $last_action_time, $last_actionident_time, $xml, $idents)
 {	
-	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', json_encode($idents));
+	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', $idents);
 	$update_status = update_post_meta($ID, '_jbm_quickbooks_status', $idents['statusCode']);
+	//error_log('XML: '.$xml);
+	//error_log('Quickbooks Update Meta: '.$update_meta.' - '.json_encode($idents));
 /*
 	foreach( $idents as $indent_k => $indent_v ) {
 		error_log($indent_k." => ".$indent_v);
@@ -360,9 +366,7 @@ function _quickbooks_invoice_add_response($requestID, $user, $action, $ID, $extr
 	error_log('Extra: '.$extra);
 	error_log('Last Action Time: '.$last_action_time);
 	error_log('Last Action Ident Time: '.$last_actionident_time);
-	error_log('XML: '.$xml);
 */
-	error_log('Quickbooks Update Meta: '.$update_meta.' - '.json_encode($idents));
 /*	mysql_query("
 		UPDATE 
 			my_customer_table 
@@ -485,10 +489,10 @@ function _quickbooks_invoice_query_response($requestID, $user, $action, $ID, $ex
  */
 function _quickbooks_error_catchall($requestID, $user, $action, $ID, $extra, &$err, $xml, $errnum, $errmsg)
 {
-	error_log($errnum.' - '.$errmsg);
+	//error_log($errnum.' - '.$errmsg);
 	$idents['statusCode'] = $errnum;
 	$idents['statusMessage'] = $errmsg;
-	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', json_encode($idents));
+	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', $idents);
 	$update_status = update_post_meta($ID, '_jbm_quickbooks_status', $errnum);
 	//error_log($requestID);
 	//error_log($ID);
@@ -502,10 +506,10 @@ function _quickbooks_error_catchall($requestID, $user, $action, $ID, $extra, &$e
  */
 function _quickbooks_error_catch500($requestID, $user, $action, $ID, $extra, &$err, $xml, $errnum, $errmsg)
 {
-	error_log($errnum.' - '.$errmsg);
+	//error_log($errnum.' - '.$errmsg);
 	$idents['statusCode'] = $errnum;
 	$idents['statusMessage'] = $errmsg;
-	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', json_encode($idents));
+	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', $idents);
 	$update_status = update_post_meta($ID, '_jbm_quickbooks_status', $errnum);
 	//error_log($requestID);
 	//error_log($ID);
