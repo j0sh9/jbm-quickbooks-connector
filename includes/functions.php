@@ -254,7 +254,7 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 */	
 	 
 	foreach ( $order->get_items('coupon') as $coupon ) {
-		if ( strpos($coupon['code'], 'club8-credit-', 0) === 0 ) {
+		if ( strpos($coupon['code'], 'club8-credit-', 0) === 0 || strpos($coupon['code'], 'affiliate-credit-', 0) === 0 ) {
 			$CouponItemRef = 'Affiliate Commission Credit';
 			$coupon['discount'] = ($coupon['discount'] * -1);
 		} else {
