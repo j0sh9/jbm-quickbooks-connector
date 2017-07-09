@@ -73,7 +73,7 @@ function _quickbooks_customer_add_request($requestID, $user, $action, $ID, $extr
 	$arr['lname'] = 'Buchanan';
 	
 	$xml = '<?xml version="1.0" encoding="utf-8"?>
-		<?qbxml version="2.0"?>
+		<?qbxml version="13.0"?>
 		<QBXML>
 			<QBXMLMsgsRq onError="stopOnError">
 				<CustomerAddRq requestID="' . $requestID . '">
@@ -398,7 +398,7 @@ function _quickbooks_payment_add_request($requestID, $user, $action, $ID, $extra
 	
 	$xml = '
 <?xml version="1.0" encoding="utf-8"?>
-<?qbxml version="2.1"?>
+<?qbxml version="13.0"?>
 <QBXML>
 	<QBXMLMsgsRq onError="stopOnError">
 		<ReceivePaymentAddRq>
@@ -463,7 +463,7 @@ function _quickbooks_invoice_query_request($requestID, $user, $action, $ID, $ext
 	
 	$xml = '
 <?xml version="1.0" encoding="utf-8"?>
-<?qbxml version="8.0"?>
+<?qbxml version="13.0"?>
 <QBXML>
   <QBXMLMsgsRq onError="stopOnError">
     <InvoiceQueryRq>
