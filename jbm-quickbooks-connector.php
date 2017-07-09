@@ -69,7 +69,8 @@ add_action( 'add_meta_boxes', 'jbm_quickbooks_enqueue_current_order_meta_box');
 function jbm_quickbooks_enqueue_current_order_html() {
 	global $post;
 	$order_id = $post->ID;
-	$quickbooks_status = get_post_meta($order_id, '_jbm_quickbooks_response');
+	$quickbooks_status = get_post_meta($order_id, '_jbm_quickbooks_response', true);
+	$quickbooks_status_code = get_post_meta($order_id, '_jbm_quickbooks_status', true);
 	
 	if ( $quickbooks_status != false ) {
 		if ( $quickbooks_status == 'Processing' ) {
@@ -86,7 +87,7 @@ function jbm_quickbooks_enqueue_current_order_html() {
 				}
 			}
 			
-			if ( $quickbooks_status['statusCode'] !== '0' ) {
+			if ( $quickbooks_status_code !== '0' ) {
 				$status_msg = '<strong style="color:red;">'.$quickbooks_status['statusMessage'].'</strong><br>';
 				$status_msg .= '<span>Status Code: '.$quickbooks_status['statusCode'].'</span>';
 				$send_text = "Resend To Quickbooks";
