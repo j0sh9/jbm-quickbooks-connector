@@ -2,7 +2,7 @@
 /*
 Plugin Name: _Quickbooks Connector
 Description: Sync orders to quickbooks
-Version: 1.3
+Version: 1.4
 */
 
 /***
@@ -145,6 +145,15 @@ function jbm_qb_admin_settings_html() {
 		//update_option( 'jbm_qb_user', $_POST['jbm_qb_user'] );
 		//update_option( 'jbm_qb_pass', $_POST['jbm_qb_user'] );
 	}
+	
+	if ( isset($_POST['resend']) ) {
+		echo "Resent: ";
+		foreach($_POST['resend'] as $resend ) {
+			$order_ids[] = $resend;
+		}
+		jbm_quickbooks_enqueue_new_order( $order_ids );
+	}
+	
 	$enabled = get_option('jbm_qb_enabled');
 	$enable_checked = '';
 	if ( $enabled === '1' )
@@ -199,31 +208,67 @@ function jbm_qb_admin_settings_html() {
 		#jbm-qb-error-table th, #jbm-qb-error-table td {
 			padding: 4px 8px;
 		}
+		#wpfooter {
+			position: static;
+		}
 	</style>
 	<div>
-		<table id="jbm-qb-error-table">
-			<tr><th>Order #</th><th>Error Code</th><th>Error Message</th></tr>
-			
-	<?php foreach($order_errors as $error) {
-		$errors = get_post_meta($error->post_id, '_jbm_quickbooks_response', true);
-		
-		if ( !is_array($errors) ) {
-			$decode_errors = json_decode(str_replace('\\', '', $errors));
-			if ( $decode_errors === NULL ) {
-				$errors = unserialize(str_replace('\\', '', $errors));
-
-			} else {
-				$errors = unserialize(serialize($errors));
+		<script>
+			function sendAll2QB() {
+				 jQuery('.resend2qb').each(function() {
+					 jQuery(this).attr('checked', true);
+				 });
+				jQuery('#jbm-qb-resend-form').submit();
 			}
-		}
-	?>
-			<tr>
-				<td><a href="/wp-admin/post.php?post=<?=$error->post_id;?>&action=edit" target="_blank"><?=$error->post_id;?></a></td>
-				<td><?= $errors['statusCode'];?></td>
-				<td><?= $errors['statusMessage'];?></td>
-			</tr>
-	<?php } ?>
-		</table>
+			function selectAll2send(selectAll) {
+				if ( selectAll.checked ) {
+				 jQuery('.resend2qb').each(function() {
+					 jQuery(this).attr('checked', true);
+				 });
+				} else {
+				 jQuery('.resend2qb').each(function() {
+					 jQuery(this).attr('checked', false);
+				 });
+				}
+			}
+		</script>
+		<form action="" method="post" id="jbm-qb-resend-form">
+			<p>
+				<button type="submit" class="button">Resend Selected Orders</button>
+				<button type="button" class="button" onClick="sendAll2QB()">Resend All Orders</button>
+			</p>
+			<table id="jbm-qb-error-table">
+				<tr><th><input type="checkbox" onChange="selectAll2send(this)" /> Resend</th><th>Order #</th><th>Error Code</th><th>Error Message</th></tr>
+
+		<?php foreach($order_errors as $error) {
+			$errors = get_post_meta($error->post_id, '_jbm_quickbooks_response', true);
+			$status = get_post_meta($error->post_id, '_jbm_quickbooks_status', true);
+			
+			if ( $errors == 'Processing' ) {
+				$errorMsg = 'Processing';
+			} else {
+				$errorMsg = $errors['statusMessage'];
+			}
+		
+/*			if ( !is_array($errors) && $errors != 'Processing' ) {
+				$decode_errors = json_decode(str_replace('\\', '', $errors));
+				if ( $decode_errors === NULL ) {
+					$errors = unserialize(str_replace('\\', '', $errors));
+
+				} else {
+					$errors = unserialize(serialize($errors));
+				}
+			}*/
+		?>
+				<tr>
+					<td><input type="checkbox" name="resend[]" id="resend<?=$error->post_id;?>" value="<?=$error->post_id;?>" class="resend2qb" /></td>
+					<td><a href="/wp-admin/post.php?post=<?=$error->post_id;?>&action=edit" target="_blank"><?=$error->post_id;?></a></td>
+					<td><?= $status;?></td>
+					<td><?= $errorMsg;?></td>
+				</tr>
+		<?php } ?>
+			</table>
+		</form>
 	</div>
 	<?php
 }
