@@ -2,7 +2,7 @@
 /*
 Plugin Name: _Quickbooks Connector
 Description: Sync orders to quickbooks
-Version: 1.4
+Version: 1.5
 */
 
 /***
@@ -280,7 +280,7 @@ add_action( 'admin_footer-edit.php', 'jbm_quickbooks_bulk_actions' );
 function jbm_quickbooks_bulk_actions() {
 	global $post_type, $post_status;
 
-	if ( $post_type === 'shop_order' && $post_status !== 'trash' && current_user_can('manage_options') ) :
+	if ( $post_type === 'shop_order' && $post_status !== 'trash' && current_user_can('manage_affiliates') ) :
 
 		?>
 		<script type="text/javascript">
