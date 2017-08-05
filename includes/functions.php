@@ -206,6 +206,10 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 			$product = wc_get_product($item['product_id']);
 		}
 		$item_sku = $product->get_sku();
+	//I created 2 SKUs for the same products in CBDX. I have to TRIM the SKU on the variation products to make this work correctly for CBDX.
+		if ( $ClassRef == 'CBDXtreme' && substr($item_sku, -2) == '-V' )
+			$item_sku = substr($item_sku, 0, -2);
+		
 		$item_subtotal = $item['subtotal'];
 		$item_total = $item['total'];
 		
