@@ -124,7 +124,7 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 	$order = wc_get_order($ID);
 	$order_status = $order->get_status();
 	
-	if ( $order_status == 'wc-failed' || $order_status == 'wc-cancelled' )
+	if ( $order_status == 'failed' || $order_status == 'cancelled' )
 		return false;
 	
 	if ( !$GlobalCustomer || empty($GlobalCustomer) ) {
