@@ -122,6 +122,10 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 	$GlobalCustomer = get_option('jbm_qb_GlobalCustomer');//'*Online orders club8';
 	
 	$order = wc_get_order($ID);
+	$order_status = $order->get_status();
+	
+	if ( $order_status == 'wc-failed' || $order_status == 'wc-cancelled' )
+		return false;
 	
 	if ( !$GlobalCustomer || empty($GlobalCustomer) ) {
 	
