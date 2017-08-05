@@ -40,7 +40,7 @@ function jbm_quickbooks_enqueue_new_order( $order_id ) {
 		foreach( $order_id as $send_id ) {
 			$order = wc_get_order($send_id);
 			$order_status = $order->get_status();
-			if ( $order_status == 'Failed' || $order_status == 'Cancelled' ) {
+			if ( $order_status == 'failed' || $order_status == 'cancelled' ) {
 				return;
 			} else {
 				$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $send_id);
@@ -50,7 +50,7 @@ function jbm_quickbooks_enqueue_new_order( $order_id ) {
 	} else {
 			$order = wc_get_order($order_id);
 			$order_status = $order->get_status();
-			if ( $order_status == 'Failed' || $order_status == 'Cancelled' ) {
+			if ( $order_status == 'failed' || $order_status == 'cancelled' ) {
 				return;
 			} else {
 				$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $send_id);
