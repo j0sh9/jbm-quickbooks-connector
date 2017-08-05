@@ -166,7 +166,10 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
         <CustomerRef>
           <FullName>'.$customer_ref.'</FullName>
         </CustomerRef>
-		<!--<ARAccountRef></ARAccountRef>-->
+	<ClassRef>
+		<FullName >'.$ClassRef.'</FullName>
+	</ClassRef>
+	<!--<ARAccountRef></ARAccountRef>-->
         <TxnDate>'.date('Y-m-d', strtotime($order->get_date_created().' +'.get_option('gmt_offset').' hours')).'</TxnDate>
         <RefNumber>'.$ID.'</RefNumber>
         <BillAddress>
