@@ -38,12 +38,24 @@ function jbm_quickbooks_enqueue_new_order( $order_id ) {
 	$Queue = new QuickBooks_WebConnector_Queue($dsn);
 	if ( is_array( $order_id ) ) {
 		foreach( $order_id as $send_id ) {
-			$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $send_id);
-			update_post_meta($send_id, '_jbm_quickbooks_response', 'Processing');
+			$order = wc_get_order($send_id);
+			$order_status = $order->get_status();
+			if ( $order_status == 'Failed' || $order_status == 'Cancelled' ) {
+				return;
+			} else {
+				$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $send_id);
+				update_post_meta($send_id, '_jbm_quickbooks_response', 'Processing');
+			}
 		}
 	} else {
-		$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $order_id);
-		update_post_meta($order_id, '_jbm_quickbooks_response', 'Processing');
+			$order = wc_get_order($order_id);
+			$order_status = $order->get_status();
+			if ( $order_status == 'Failed' || $order_status == 'Cancelled' ) {
+				return;
+			} else {
+				$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $send_id);
+				update_post_meta($send_id, '_jbm_quickbooks_response', 'Processing');
+			}
 	}
 	
 }
