@@ -53,8 +53,8 @@ function jbm_quickbooks_enqueue_new_order( $order_id ) {
 			if ( $order_status == 'failed' || $order_status == 'cancelled' ) {
 				return;
 			} else {
-				$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $send_id);
-				update_post_meta($send_id, '_jbm_quickbooks_response', 'Processing');
+				$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $order_id);
+				update_post_meta($order_id, '_jbm_quickbooks_response', 'Processing');
 			}
 	}
 	
