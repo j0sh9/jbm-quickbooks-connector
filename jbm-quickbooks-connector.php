@@ -320,7 +320,7 @@ function jbm_quickbooks_process_bulk_actions() {
 		$order_ids     = array();
 
 		// Return if not processing PIP actions
-		if ( ! $action || ! $action == 'jbm_quickbooks_bulk_send' ) {
+		if ( ! $action || $action != 'jbm_quickbooks_bulk_send' ) {
 			return;
 		}
 
