@@ -370,6 +370,11 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
  */
 function _quickbooks_invoice_add_response($requestID, $user, $action, $ID, $extra, &$err, $last_action_time, $last_actionident_time, $xml, $idents)
 {	
+	if ( get_post_meta($ID, '_jbm_quickbooks_status', true) === '0' ) {
+		$edit_link = 'https://'.$_SERVER['HTTP_HOST'].'/wp-admin/post.php?post='.$ID.'&action=edit';
+		$headers = array('Content-Type: text/html; charset=UTF-8');
+		wp_mail( 'josh@isodiol.com', 'QB Order '.$ID.' duplicate', '<a href="'.$edit_link.'">'.$ID.'</a>', $headers );
+	}
 	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', $idents);
 	$update_status = update_post_meta($ID, '_jbm_quickbooks_status', $idents['statusCode']);
 	//error_log('XML: '.$xml);
