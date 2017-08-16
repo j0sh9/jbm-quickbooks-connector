@@ -513,6 +513,11 @@ function _quickbooks_invoice_query_response($requestID, $user, $action, $ID, $ex
  */
 function _quickbooks_error_catchall($requestID, $user, $action, $ID, $extra, &$err, $xml, $errnum, $errmsg)
 {
+	if ( get_post_meta($ID, '_jbm_quickbooks_status', true) === '0' ) {
+		$edit_link = 'https://'.$_SERVER['HTTP_HOST'].'/wp-admin/post.php?post='.$ID.'&action=edit';
+		$headers = array('Content-Type: text/html; charset=UTF-8');
+		wp_mail( 'josh@isodiol.com', 'QB Order '.$ID.' duplicate', '<a href="'.$edit_link.'">'.$ID.'</a>', $headers );
+	}
 	//error_log($errnum.' - '.$errmsg);
 	$idents['statusCode'] = $errnum;
 	$idents['statusMessage'] = $errmsg;
@@ -530,6 +535,11 @@ function _quickbooks_error_catchall($requestID, $user, $action, $ID, $extra, &$e
  */
 function _quickbooks_error_catch500($requestID, $user, $action, $ID, $extra, &$err, $xml, $errnum, $errmsg)
 {
+	if ( get_post_meta($ID, '_jbm_quickbooks_status', true) === '0' ) {
+		$edit_link = 'https://'.$_SERVER['HTTP_HOST'].'/wp-admin/post.php?post='.$ID.'&action=edit';
+		$headers = array('Content-Type: text/html; charset=UTF-8');
+		wp_mail( 'josh@isodiol.com', 'QB Order '.$ID.' duplicate', '<a href="'.$edit_link.'">'.$ID.'</a>', $headers );
+	}
 	//error_log($errnum.' - '.$errmsg);
 	$idents['statusCode'] = $errnum;
 	$idents['statusMessage'] = $errmsg;
