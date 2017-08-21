@@ -153,6 +153,7 @@ function jbm_qb_admin_settings_html() {
 		update_option( 'jbm_qb_ClassRef', $_POST['jbm_qb_ClassRef'] );
 		update_option( 'jbm_qb_InventorySiteRef', $_POST['jbm_qb_InventorySiteRef'] );
 		update_option( 'jbm_qb_GlobalCustomer', $_POST['jbm_qb_GlobalCustomer'] );
+		update_option( 'jbm_qb_email_duplicates', $_POST['jbm_qb_email_duplicates'] );
 		
 		//update_option( 'jbm_qb_user', $_POST['jbm_qb_user'] );
 		//update_option( 'jbm_qb_pass', $_POST['jbm_qb_user'] );
@@ -174,6 +175,7 @@ function jbm_qb_admin_settings_html() {
 	$ClassRef = get_option('jbm_qb_ClassRef');//'Club 8';
 	$InventorySiteRef = get_option('jbm_qb_InventorySiteRef');//'Escondido';
 	$GlobalCustomer = get_option('jbm_qb_GlobalCustomer');//'*Online orders club8';
+	$duplicateEmails = get_option('jbm_qb_email_duplicates'); //Default to admin if empty
 	
 	global $wpdb;
 	$errors_query = "
@@ -194,6 +196,7 @@ function jbm_qb_admin_settings_html() {
 		<p><label><strong>Invoice Class</strong> <input name="jbm_qb_ClassRef" id="jbm_qb_ClassRef" type="text" placeholder="ISO International" value="<?=$ClassRef?>" ></label></p>
 		<p><label><strong>Inventory Site</strong> <input name="jbm_qb_InventorySiteRef" id="jbm_qb_InventorySiteRef" type="text" placeholder="Escondido" value="<?=$InventorySiteRef?>" ></label></p>
 		<p><label><strong>Global Customer</strong> <input name="jbm_qb_GlobalCustomer" id="jbm_qb_GlobalCustomer" type="text" placeholder="Override Customer By Payment Method" value="<?=$GlobalCustomer?>" >Leave empty to assign customer by payment method.</label></p>
+		<p><label><strong>Email Duplicates</strong> <input name="jbm_qb_email_duplicates" id="jbm_qb_email_duplicates" type="text" placeholder="Who gets a duplicate notice?" value="<?=$duplicateEmails?>" >Email admin if left blank.</label></p>
 		</div>
 		<p><button type="submit" name="jbm_qb_submit" id="jbm_qb_submit" value="1" class="button">Save Settings</button></p>
 	</form>
