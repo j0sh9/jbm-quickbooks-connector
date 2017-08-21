@@ -372,10 +372,11 @@ function _quickbooks_invoice_add_response($requestID, $user, $action, $ID, $extr
 {	
 	if ( get_post_meta($ID, '_jbm_quickbooks_status', true) === '0' ) {
 		$edit_link = 'https://'.$_SERVER['HTTP_HOST'].'/wp-admin/post.php?post='.$ID.'&action=edit';
+		$dupmsg = get_bloginfo('name').' order number <a href="'.$edit_link.'">'.$ID.'</a> duplicated in QuickBooks';
 		$headers = array('Content-Type: text/html; charset=UTF-8');
 		$recipients = get_option('jbm_qb_email_duplicates');
 		if ( empty($recipients) ) $recipients = get_option('admin_email');
-		wp_mail( $recipients, 'QB Order '.$ID.' duplicate', '<a href="'.$edit_link.'">'.$ID.'</a>', $headers );
+		wp_mail( $recipients, 'QB Order '.$ID.' duplicate', $dupmsg, $headers );
 	}
 	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', $idents);
 	$update_status = update_post_meta($ID, '_jbm_quickbooks_status', $idents['statusCode']);
