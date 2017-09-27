@@ -45,6 +45,8 @@ function jbm_quickbooks_enqueue_new_order( $order_id ) {
 			} else {
 				$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $send_id);
 				update_post_meta($send_id, '_jbm_quickbooks_response', 'Processing');
+				if ( get_post_meta($send_id, '_mc8_funds_wallet_amount', true) )
+					$Queue->enqueue(QUICKBOOKS_ADD_RECEIVEPAYMENT, $send_id);
 			}
 		}
 	} else {
@@ -55,6 +57,8 @@ function jbm_quickbooks_enqueue_new_order( $order_id ) {
 			} else {
 				$Queue->enqueue(QUICKBOOKS_ADD_INVOICE, $order_id);
 				update_post_meta($order_id, '_jbm_quickbooks_response', 'Processing');
+				if ( get_post_meta($order_id, '_mc8_funds_wallet_amount', true) )
+					$Queue->enqueue(QUICKBOOKS_ADD_RECEIVEPAYMENT, $order_id);
 			}
 	}
 	
@@ -256,7 +260,9 @@ function jbm_qb_admin_settings_html() {
 				<tr><th><input type="checkbox" onChange="selectAll2send(this)" /> Resend</th><th>Order #</th><th>Error Code</th><th>Error Message</th></tr>
 
 		<?php foreach($order_errors as $error) {
-			$errors = get_post_meta($error->post_id, '_jbm_quickbooks_response', true);
+			$errors = get_post_meta($error->post_id, '_jbm_quickbooks_error', true);
+			if ( empty($errors) )
+				$errors = get_post_meta($error->post_id, '_jbm_quickbooks_response', true);
 			$status = get_post_meta($error->post_id, '_jbm_quickbooks_status', true);
 			
 			if ( $errors == 'Processing' ) {
