@@ -329,7 +329,9 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 	$xml .= '
       </InvoiceAdd>
     </InvoiceAddRq>';
-/* This is code to apply the payment	
+	/*
+	$MC8_wallet = get_post_meta($order_id, '_mc8_funds_wallet_amount', true);
+if ( $MC8_wallet > 0 ) {	
 	$xml .= '
 	<ReceivePaymentAddRq requestID="'.$requestID.'">
 		<ReceivePaymentAdd>
@@ -342,21 +344,22 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 			</ARAccountRef>-->
 			<TxnDate>'.date('Y-m-d', strtotime($order->get_date_paid())).'</TxnDate>
 			<RefNumber>'.$ID.'</RefNumber>
-			<TotalAmount>'.number_format($order->get_total(),2,'.','').'</TotalAmount>
+			<TotalAmount>'.number_format($MC8_wallet,2,'.','').'</TotalAmount>
 			<PaymentMethodRef>
-				<FullName>'.clean($order->get_payment_method_title()).'</FullName>
+				<FullName>MC8 Wallet</FullName>
 			</PaymentMethodRef>
 			<Memo><![CDATA[Inv. #'.$ID.']]></Memo>
-			<!--<DepositToAccountRef>
-				<FullName>Checking</FullName>
-			</DepositToAccountRef>-->
+			<DepositToAccountRef>
+				<FullName>MC8 Wallet</FullName>
+			</DepositToAccountRef>
 			<AppliedToTxnAdd>
 				<TxnID useMacro="TxnID:'.$TxnIDcode.$ID.'"/>
-				<PaymentAmount>'.$order->get_total().'</PaymentAmount>
+				<PaymentAmount>'.number_format($MC8_wallet,2,'.','').'</PaymentAmount>
 			</AppliedToTxnAdd>
 		</ReceivePaymentAdd>
 	</ReceivePaymentAddRq>';
-*/
+}
+	*/
 	$xml .= '
   </QBXMLMsgsRq>
 </QBXML>
@@ -380,6 +383,7 @@ function _quickbooks_invoice_add_response($requestID, $user, $action, $ID, $extr
 	}
 	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', $idents);
 	$update_status = update_post_meta($ID, '_jbm_quickbooks_status', $idents['statusCode']);
+	
 	//error_log('XML: '.$xml);
 	//error_log('Quickbooks Update Meta: '.$update_meta.' - '.json_encode($idents));
 /*
@@ -394,14 +398,6 @@ function _quickbooks_invoice_add_response($requestID, $user, $action, $ID, $extr
 	error_log('Last Action Time: '.$last_action_time);
 	error_log('Last Action Ident Time: '.$last_actionident_time);
 */
-/*	mysql_query("
-		UPDATE 
-			my_customer_table 
-		SET 
-			quickbooks_listid = '" . mysql_real_escape_string($idents['ListID']) . "', 
-			quickbooks_editsequence = '" . mysql_real_escape_string($idents['EditSequence']) . "'
-		WHERE 
-			id = " . (int) $ID);*/
 }
 
 
@@ -410,6 +406,17 @@ function _quickbooks_invoice_add_response($requestID, $user, $action, $ID, $extr
  */
 function _quickbooks_payment_add_request($requestID, $user, $action, $ID, $extra, &$err, $last_action_time, $last_actionident_time, $version, $locale)
 {
+	if ( !$ID ) return false;
+	
+	$response = get_post_meta($ID, '_jbm_quickbooks_response', true);
+	//if ( !is_array($response) ) return false;
+	$TxnID = $response['TxnID'];
+	$customer = $response['FullName'];
+	
+	
+	$wallet_amt = get_post_meta($ID, '_mc8_funds_wallet_amount', true);
+	
+	$order = wc_get_order($ID);
 	
 	$xml = '
 <?xml version="1.0" encoding="utf-8"?>
@@ -419,35 +426,33 @@ function _quickbooks_payment_add_request($requestID, $user, $action, $ID, $extra
 		<ReceivePaymentAddRq>
 			<ReceivePaymentAdd>
 				<CustomerRef>
-					<!--<ListID>F230000-1196864585</ListID>-->
-					<FullName>Isodiol</FullName>
+					<FullName>'.$customer.'</FullName>
 				</CustomerRef>
 				<!--<ARAccountRef>
 					<ListID></ListID>
 					<FullName></FullName>
 				</ARAccountRef>-->
-				<TxnDate>2007-12-14</TxnDate>
-				<RefNumber>9110</RefNumber>
-				<TotalAmount>195.00</TotalAmount>
+				<TxnDate>'.date('Y-m-d', strtotime($order->get_date_paid())).'</TxnDate>
+				<RefNumber>'.$ID.'</RefNumber>
+				<TotalAmount>'.$wallet_amt.'</TotalAmount>
 				<PaymentMethodRef>
-					<FullName>Master Card</FullName>
+					<FullName>MC8 Wallet</FullName>
 				</PaymentMethodRef>
-				<Memo>Inv. #54321</Memo>
+				<Memo>Inv. #'.$ID.'</Memo>
 				<DepositToAccountRef>
 					<!--<ListID></ListID>-->
-					<FullName>Checking</FullName>
+					<FullName>MC8 Wallet</FullName>
 				</DepositToAccountRef>
 				<AppliedToTxnAdd>
-					<!--<TxnID>2421F-1639605093</TxnID>-->
-					<TxnID useMacro="TxnID:ISO8888"/>
-					<PaymentAmount>195.00</PaymentAmount>
+					<TxnID>'.$TxnID.'</TxnID>
+					<PaymentAmount>'.$wallet_amt.'</PaymentAmount>
 				</AppliedToTxnAdd>
 			</ReceivePaymentAdd>
 		</ReceivePaymentAddRq>
 	</QBXMLMsgsRq>
 </QBXML>
 	';
-	
+	//error_log('XML: '.$xml);
 	return $xml;
 }
 
@@ -455,18 +460,9 @@ function _quickbooks_payment_add_request($requestID, $user, $action, $ID, $extra
  * Receive a response from QuickBooks 
  */
 function _quickbooks_payment_add_response($requestID, $user, $action, $ID, $extra, &$err, $last_action_time, $last_actionident_time, $xml, $idents)
-{	
-	foreach( $idents as $indent_k => $indent_v ) {
-		error_log($indent_k." => ".$indent_v);
-	}
-/*	mysql_query("
-		UPDATE 
-			my_customer_table 
-		SET 
-			quickbooks_listid = '" . mysql_real_escape_string($idents['ListID']) . "', 
-			quickbooks_editsequence = '" . mysql_real_escape_string($idents['EditSequence']) . "'
-		WHERE 
-			id = " . (int) $ID);*/
+{		
+	$update_meta = update_post_meta($ID, '_jbm_quickbooks_payment_response', $idents);
+	$update_status = update_post_meta($ID, '_jbm_quickbooks_payment_status', $idents['statusCode']);
 }
 
 
@@ -519,16 +515,19 @@ function _quickbooks_error_catchall($requestID, $user, $action, $ID, $extra, &$e
 	if ( get_post_meta($ID, '_jbm_quickbooks_status', true) === '0' ) {
 		$edit_link = 'https://'.$_SERVER['HTTP_HOST'].'/wp-admin/post.php?post='.$ID.'&action=edit';
 		$headers = array('Content-Type: text/html; charset=UTF-8');
-		wp_mail( 'josh@isodiol.com', 'QB Order '.$ID.' duplicate', '<a href="'.$edit_link.'">'.$ID.'</a>', $headers );
+		$recipients = get_option('jbm_qb_email_duplicates');
+		if ( empty($recipients) ) $recipients = get_option('admin_email');
+		wp_mail( $recipients, 'QB Order '.$ID.' duplicate', '<a href="'.$edit_link.'">'.$ID.'</a>', $headers );
 	}
 	//error_log($errnum.' - '.$errmsg);
 	$idents['statusCode'] = $errnum;
 	$idents['statusMessage'] = $errmsg;
-	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', $idents);
+	$update_meta = update_post_meta($ID, '_jbm_quickbooks_error', $idents);
 	$update_status = update_post_meta($ID, '_jbm_quickbooks_status', $errnum);
 	//error_log($requestID);
 	//error_log($ID);
 	//error_log($xml);
+	//error_log($action);
 	return true;
 }
 
@@ -541,14 +540,17 @@ function _quickbooks_error_catch500($requestID, $user, $action, $ID, $extra, &$e
 	if ( get_post_meta($ID, '_jbm_quickbooks_status', true) === '0' ) {
 		$edit_link = 'https://'.$_SERVER['HTTP_HOST'].'/wp-admin/post.php?post='.$ID.'&action=edit';
 		$headers = array('Content-Type: text/html; charset=UTF-8');
-		wp_mail( 'josh@isodiol.com', 'QB Order '.$ID.' duplicate', '<a href="'.$edit_link.'">'.$ID.'</a>', $headers );
+		$recipients = get_option('jbm_qb_email_duplicates');
+		if ( empty($recipients) ) $recipients = get_option('admin_email');
+		wp_mail( $recipients, 'QB Order '.$ID.' duplicate', '<a href="'.$edit_link.'">'.$ID.'</a>', $headers );
 	}
 	//error_log($errnum.' - '.$errmsg);
 	$idents['statusCode'] = $errnum;
 	$idents['statusMessage'] = $errmsg;
-	$update_meta = update_post_meta($ID, '_jbm_quickbooks_response', $idents);
+	$update_meta = update_post_meta($ID, '_jbm_quickbooks_error', $idents);
 	$update_status = update_post_meta($ID, '_jbm_quickbooks_status', $errnum);
 	//error_log($requestID);
 	//error_log($ID);
+	//error_log($action);
 	return true;
 }
