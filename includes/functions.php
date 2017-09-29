@@ -414,7 +414,7 @@ function _quickbooks_payment_add_request($requestID, $user, $action, $ID, $extra
 	$customer = $response['FullName'];
 	
 	
-	$wallet_amt = get_post_meta($ID, '_mc8_funds_wallet_amount', true);
+	$wallet_amt = number_format(get_post_meta($ID, '_mc8_funds_wallet_amount', true)),2);
 	
 	$order = wc_get_order($ID);
 	
