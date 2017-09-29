@@ -280,7 +280,7 @@ function _quickbooks_invoice_add_request($requestID, $user, $action, $ID, $extra
 			$CouponItemRef = 'Website Discount';
 		}
 		
-		$discount_tax = $coupon['discount_tax'];
+		$discount_tax = ($coupon['discount_tax'] * -1);
 		if ( $discount_tax > 0 ) {
 			$SalesTaxCodeRef = 'Tax';
 		} else {
