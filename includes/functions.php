@@ -364,7 +364,7 @@ if ( $MC8_wallet > 0 ) {
   </QBXMLMsgsRq>
 </QBXML>
 	';
-error_log('XML: '.$xml);	
+//error_log('XML: '.$xml);	
 	return $xml;
 }
 
