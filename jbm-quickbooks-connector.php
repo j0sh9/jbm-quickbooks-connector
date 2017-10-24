@@ -199,7 +199,7 @@ function jbm_qb_admin_settings_html() {
 	//$args = array( 'posts_per_page' => 5, 'offset'=> 1, 'category' => 1 );
 	$order_errors = $wpdb->get_results($errors_query, OBJECT);
 	
-	$never_sent_sql = "SELECT * FROM wp_posts AS a WHERE a.post_type = 'shop_order' AND a.post_date > '2017-06-01 00:00:00' AND (a.post_status = 'wc-processing' OR a.post_status = 'wc-completed') AND NOT EXISTS (SELECT * FROM quickbooks_queue WHERE a.ID = ident) ORDER BY a.post_date LIMIT 100";
+	$never_sent_sql = "SELECT * FROM wp_posts AS a WHERE a.post_type = 'shop_order' AND a.post_date > '2017-08-01 00:00:00' AND (a.post_status = 'wc-processing' OR a.post_status = 'wc-completed') AND NOT EXISTS (SELECT * FROM quickbooks_queue WHERE a.ID = ident) ORDER BY a.post_date LIMIT 100";
 	$never_sent = $wpdb->get_results($never_sent_sql, OBJECT);
 	?>
 	<h1>QuickBooks Sync Settings</h1>
