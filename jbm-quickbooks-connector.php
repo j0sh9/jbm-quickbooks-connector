@@ -63,9 +63,17 @@ function jbm_quickbooks_enqueue_new_order( $order_id ) {
 	}
 	
 }
-add_action( 'woocommerce_order_status_processing', 'jbm_quickbooks_enqueue_new_order', 10, 1);
 
-
+if ( isset( $_GET['post_type'] ) && $_GET['post_type'] == 'shop_order' && isset( $_GET['action'] ) && $_GET['action'] == 'mark_processing' ) {
+		if ( isset( $_REQUEST['post'] ) ) {
+			$order_ids = array_map( 'absint', $_REQUEST['post'] );
+		}
+		if ( $order_ids ) {
+			jbm_quickbooks_enqueue_new_order( $order_ids );
+		}
+} else {
+	add_action( 'woocommerce_order_status_processing', 'jbm_quickbooks_enqueue_new_order', 10, 1);
+}
 
 function jbm_quickbooks_enqueue_current_order_meta_box() {
 	if ( ! get_option('jbm_qb_enabled') ) return;
@@ -190,6 +198,9 @@ function jbm_qb_admin_settings_html() {
 		";
 	//$args = array( 'posts_per_page' => 5, 'offset'=> 1, 'category' => 1 );
 	$order_errors = $wpdb->get_results($errors_query, OBJECT);
+	
+	$never_sent_sql = "SELECT * FROM wp_posts AS a WHERE a.post_date > '2017-06-01 00:00:00' AND (a.post_status = 'wc-processing' OR a.post_status = 'wc-completed') AND NOT EXISTS (SELECT * FROM quickbooks_queue WHERE a.ID = ident) ORDER BY a.post_date LIMIT 100";
+	$never_sent = $wpdb->get_results($never_sent_sql, OBJECT);
 	?>
 	<h1>QuickBooks Sync Settings</h1>
 	<form action="" method="post" id="jbm-qb-form">
@@ -286,6 +297,16 @@ function jbm_qb_admin_settings_html() {
 					<td><a href="/wp-admin/post.php?post=<?=$error->post_id;?>&action=edit" target="_blank"><?=$error->post_id;?></a></td>
 					<td><?= $status;?></td>
 					<td><?= $errorMsg;?></td>
+				</tr>
+		<?php } ?>
+				
+		<?php foreach($never_sent as $never ) {
+		?>
+				<tr>
+					<td><input type="checkbox" name="resend[]" id="resend<?=$never->ID;?>" value="<?=$never->ID;?>" class="resend2qb" /></td>
+					<td><a href="/wp-admin/post.php?post=<?=$never->ID;?>&action=edit" target="_blank"><?=$never->ID;?></a></td>
+					<td>NS</td>
+					<td>Never sent to QuickBooks</td>
 				</tr>
 		<?php } ?>
 			</table>
